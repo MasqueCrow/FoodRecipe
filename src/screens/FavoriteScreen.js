@@ -17,64 +17,68 @@ import {
 export default function FavoriteScreen() {
   const navigation = useNavigation();
 
-  // Assuming you have a similar structure for recipes in your Redux store
+  // Access favorite recipes from Redux state
   const favoriteRecipes = useSelector((state) => state.favorites);
   const favoriteRecipesList = favoriteRecipes?.favoriterecipes || [];
-  console.log(favoriteRecipes.favoriterecipes);
-  console.log('favoriteRecipesList',favoriteRecipesList);
-  
-  
 
+  // Render empty state when no favorites
   if (favoriteRecipesList.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>No favorite recipes yet!</Text>
-        {/* add back button */}
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={{
-            backgroundColor: "#2563EB",
-            padding: 10,
-            borderRadius: 5,
-            marginTop: 10,
-            width: 100,
-            alignItems: "center ",
-          }}
+          style={styles.goBackButton}
         >
-          <Text style={{ color: "#fff" }}>Go back</Text>
+          <Text style={styles.goBackButtonText}>Go back</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
+  // Render each recipe item in the list
+  const renderItem = ({ item }) => {
+    // Safely truncate title to 20 chars with ellipsis
+    const title = typeof item.recipeName === "string" ? item.recipeName : "No Title";
+    const truncatedTitle =
+      title.length > 20 ? title.substring(0, 20) + "..." : title;
+
+    return (
+      <TouchableOpacity
+        style={styles.cardContainer}
+        onPress={() =>
+          navigation.navigate("RecipeDetailScreen", { recipe: item })
+        }
+      >
+        <Image source={{ uri: item.recipeImage }} style={styles.recipeImage} />
+        <Text style={styles.recipeTitle}>{truncatedTitle}</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
-    <>
+    <View style={{ flex: 1 }}>
       {/* Heading */}
-      <View testID="FavoriteRecipes">
-        <Text
-          style={{ fontSize: hp(3.8), marginTop: hp(4), marginLeft: 20 }}
-          className="font-semibold text-neutral-600"
-        >
-          My Favorite Recipes
-        </Text>
+      <View testID="favoriteRecipes" style={styles.headingContainer}>
+        <Text style={styles.headingText}>My Favorite Recipes</Text>
       </View>
-    
+
+      {/* Go Back Button */}
       <TouchableOpacity
         onPress={() => navigation.goBack()}
-        style={{
-          backgroundColor: "#2563EB",
-          padding: 10,
-          borderRadius: 5,
-          marginTop: 10,
-          width: 100,
-          alignItems: "center",
-          marginLeft: 20,
-        }}
+        style={styles.goBackButton}
       >
-        <Text style={{ color: "#fff" }}>Go back</Text>
+        <Text style={styles.goBackButtonText}>Go back</Text>
       </TouchableOpacity>
-    
-    </>
+
+      {/* Favorite Recipes List */}
+      <FlatList
+        data={favoriteRecipesList}
+        keyExtractor={(item) => item.idFood.toString()}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContentContainer}
+      />
+    </View>
   );
 }
 
@@ -86,7 +90,29 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: hp(2.5),
-    color: "#6B7280", // text-neutral-600
+    color: "#6B7280",
+  },
+  goBackButton: {
+    backgroundColor: "#2563EB",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    width: 100,
+    alignItems: "center",
+    marginLeft: 20,
+  },
+  goBackButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  headingContainer: {
+    paddingHorizontal: wp(4),
+    paddingTop: hp(4),
+  },
+  headingText: {
+    fontSize: hp(3.8),
+    fontWeight: "600",
+    color: "#52525B",
   },
   listContentContainer: {
     paddingHorizontal: wp(4),
@@ -97,8 +123,8 @@ const styles = StyleSheet.create({
     marginBottom: hp(2),
     padding: wp(4),
     borderRadius: 10,
-    elevation: 3, // For Android shadow
-    shadowColor: "#000", // For iOS shadow
+    elevation: 3, // Android shadow
+    shadowColor: "#000", // iOS shadow
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -114,6 +140,6 @@ const styles = StyleSheet.create({
   recipeTitle: {
     fontSize: hp(2),
     fontWeight: "bold",
-    color: "#4B5563", // text-neutral-700
+    color: "#4B5563",
   },
 });

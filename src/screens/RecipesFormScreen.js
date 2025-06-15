@@ -1,18 +1,48 @@
-import { View,Text,TextInput,TouchableOpacity,Image,StyleSheet,} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {widthPercentageToDP as wp,heightPercentageToDP as hp,} from "react-native-responsive-screen";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export default function RecipesFormScreen({ route, navigation }) {
   const { recipeToEdit, recipeIndex, onrecipeEdited } = route.params || {};
   const [title, setTitle] = useState(recipeToEdit ? recipeToEdit.title : "");
   const [image, setImage] = useState(recipeToEdit ? recipeToEdit.image : "");
-  const [description, setDescription] = useState(
-    recipeToEdit ? recipeToEdit.description : ""
-  );
+  const [description, setDescription] = useState(recipeToEdit ? recipeToEdit.description : "");
 
   const saverecipe = async () => {
- 
+    try {
+      // Create new recipe object from form state
+      const newrecipe = {
+        title: title.trim(),
+        image: image.trim(),
+        description: description.trim(),
+      };
+
+      // Get existing recipes from AsyncStorage
+      const storedRecipes = await AsyncStorage.getItem("customrecipes");
+      let recipes = storedRecipes ? JSON.parse(storedRecipes) : [];
+
+      if (recipeToEdit && typeof recipeIndex === "number") {
+        // Editing existing recipe: update it
+        recipes[recipeIndex] = newrecipe;
+
+        // Call callback to notify parent component of edit
+        if (typeof onrecipeEdited === "function") {
+          onrecipeEdited(newrecipe, recipeIndex);
+        }
+      } else {
+        // Adding new recipe: push to array
+        recipes.push(newrecipe);
+      }
+
+      // Save updated recipes list back to AsyncStorage
+      await AsyncStorage.setItem("customrecipes", JSON.stringify(recipes));
+
+      // Navigate back after saving
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+    }
   };
 
   return (
@@ -58,12 +88,12 @@ const styles = StyleSheet.create({
     marginTop: hp(4),
     borderWidth: 1,
     borderColor: "#ddd",
-    padding: wp(.5),
+    padding: wp(0.5),
     marginVertical: hp(1),
   },
   image: {
     width: 300,
-    height:200,
+    height: 200,
     margin: wp(2),
   },
   imagePlaceholder: {
@@ -78,7 +108,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: "#4F75FF",
-    padding: wp(.5),
+    padding: wp(0.5),
     alignItems: "center",
     borderRadius: 5,
     marginTop: hp(2),
